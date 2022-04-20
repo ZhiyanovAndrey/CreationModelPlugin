@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace CreationModelPlugin
 {
     [TransactionAttribute(TransactionMode.Manual)]
-    public class CreationModel:IExternalCommand
+    public class CreationModel : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -18,20 +18,14 @@ namespace CreationModelPlugin
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;
 
+            List<Wall> walls = new List<Wall>(); //чистый список для внесения стен
             Level level1, level2;
-            GetLevel(doc, out level1, out level2);
 
+
+            //формирование списка точек где будут стены
             //зададим размеры домика
             double width = UnitUtils.ConvertToInternalUnits(10000, UnitTypeId.Millimeters);
             double depth = UnitUtils.ConvertToInternalUnits(5000, UnitTypeId.Millimeters);
-
-            CreateWalls(doc, level1, level2, width, depth);
-
-            return Result.Succeeded;
-        }
-
-        private static void CreateWalls(Document doc, Level level1, Level level2, double width, double depth)
-        {
             double dx = width / 2;
             double dy = depth / 2;
 
@@ -42,8 +36,17 @@ namespace CreationModelPlugin
             points.Add(new XYZ(-dx, dy, 0));
             points.Add(new XYZ(-dx, -dy, 0));
 
-            List<Wall> walls = new List<Wall>(); //чистый список для 
+            GetLevels(doc, out level1, out level2); //фильтруем уровни
+            CreateWall(doc, level1, level2, points, walls); //создаем 4 стены
 
+
+
+            return Result.Succeeded;
+        }
+
+        //метод для создания 4х стен
+        private static void CreateWall(Document doc, Level level1, Level level2, List<XYZ> points, List<Wall> walls)
+        {
             Transaction transaction = new Transaction(doc);
             //название транзакции обязательно. Указывается вторым арг-ом или в методе Start
             transaction.Start("Построение стен");
@@ -61,7 +64,8 @@ namespace CreationModelPlugin
             transaction.Commit();
         }
 
-        private static void GetLevel(Document doc, out Level level1, out Level level2)
+
+        private static void GetLevels(Document doc, out Level level1, out Level level2)
         {
             //общая часть фильтрации уровней
             List<Level> listLevels = new FilteredElementCollector(doc)
