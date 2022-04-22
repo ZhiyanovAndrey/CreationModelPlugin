@@ -1,4 +1,5 @@
-﻿using Autodesk.Revit.Attributes;
+﻿using Autodesk.Revit.ApplicationServices;
+using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
 using Autodesk.Revit.UI;
@@ -46,10 +47,51 @@ namespace CreationModelPlugin
             AddWindow(doc, level1, walls[1]);//создаем окно в стене 1
             AddWindow(doc, level1, walls[2]);
             AddWindow(doc, level1, walls[3]);
+            AddRoof(doc, level2, walls);
 
             transaction.Commit();
 
             return Result.Succeeded;
+        }
+        //метод для создания крыши
+        private void AddRoof(Document doc, Level level2, List<Wall> walls)
+        {
+            RoofType roofType = new FilteredElementCollector(doc)
+                       .OfClass(typeof(RoofType))
+                       .OfType<RoofType>()
+                       .Where(x => x.Name.Equals("Типовой - 400мм"))
+                       .Where(x => x.FamilyName.Equals("Базовая крыша"))
+                       .FirstOrDefault();
+
+
+            //на документе получаем свойство Application
+            Application application = doc.Application;
+
+            // //переберем все стены вытащим осевую
+            //CurveArray curveArray = application.Create.NewCurveArray();
+            //for (int i = 0; i < 4; i++)
+            //{
+            //    LocationCurve curve = walls[i].Location as LocationCurve;
+            //    curveArray.Append(curve.Curve); 
+            //}
+
+            LocationCurve curve1 = walls[0].Location as LocationCurve;
+            LocationCurve curve2 = walls[2].Location as LocationCurve;
+
+            XYZ point = curve1.Curve.GetEndPoint(0);
+            XYZ point1 = curve1.Curve.GetEndPoint(1);
+            XYZ point2 = curve2.Curve.GetEndPoint(0);
+            XYZ point3 = curve2.Curve.GetEndPoint(1);
+        
+            CurveArray curveArray = new CurveArray();
+            curveArray.Append(Line.CreateBound(new XYZ(-16, -8, 0), new XYZ(-16, 0, 20)));
+            curveArray.Append(Line.CreateBound(new XYZ(-16, 0, 20), new XYZ(-16, 8, 0)));
+
+            ReferencePlane plane = doc.Create.NewReferencePlane2(point, point+new XYZ(0, 0, 20), point+new XYZ(0, 20, 0), doc.ActiveView);
+            doc.Create.NewExtrusionRoof(curveArray, plane, level2, roofType, 0, 3);
+
+
+
         }
 
         //метод для добавления окна
@@ -74,10 +116,10 @@ namespace CreationModelPlugin
 
             //Create.NewFamilyInstance нуждается, что бы элемент был активен в модели если нет то активировать
             if (!winType.IsActive) winType.Activate();
-            FamilyInstance window=doc.Create.NewFamilyInstance(point, winType, wall, level1, StructuralType.NonStructural);
-            
+            FamilyInstance window = doc.Create.NewFamilyInstance(point, winType, wall, level1, StructuralType.NonStructural);
+
             Parameter offset = window.get_Parameter(BuiltInParameter.INSTANCE_SILL_HEIGHT_PARAM);
-            offset.Set(UnitUtils.ConvertToInternalUnits(600, UnitTypeId.Millimeters));
+            offset.Set(UnitUtils.ConvertToInternalUnits(650, UnitTypeId.Millimeters));
 
 
         }
