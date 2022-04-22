@@ -67,13 +67,7 @@ namespace CreationModelPlugin
             //на документе получаем свойство Application
             Application application = doc.Application;
 
-            // //переберем все стены вытащим осевую
-            //CurveArray curveArray = application.Create.NewCurveArray();
-            //for (int i = 0; i < 4; i++)
-            //{
-            //    LocationCurve curve = walls[i].Location as LocationCurve;
-            //    curveArray.Append(curve.Curve); 
-            //}
+
 
             LocationCurve curve1 = walls[0].Location as LocationCurve;
             LocationCurve curve2 = walls[2].Location as LocationCurve;
@@ -82,13 +76,19 @@ namespace CreationModelPlugin
             XYZ point1 = curve1.Curve.GetEndPoint(1);
             XYZ point2 = curve2.Curve.GetEndPoint(0);
             XYZ point3 = curve2.Curve.GetEndPoint(1);
-        
-            CurveArray curveArray = new CurveArray();
-            curveArray.Append(Line.CreateBound(new XYZ(-16, -8, 0), new XYZ(-16, 0, 20)));
-            curveArray.Append(Line.CreateBound(new XYZ(-16, 0, 20), new XYZ(-16, 8, 0)));
 
-            ReferencePlane plane = doc.Create.NewReferencePlane2(point, point+new XYZ(0, 0, 20), point+new XYZ(0, 20, 0), doc.ActiveView);
-            doc.Create.NewExtrusionRoof(curveArray, plane, level2, roofType, 0, 3);
+
+            double wallWidth = walls[0].Width;
+            double ww = wallWidth / 2;
+            double dh = level2.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
+            XYZ offSet = new XYZ(-ww, -ww, dh);
+
+            CurveArray curveArray = new CurveArray();
+            curveArray.Append(Line.CreateBound(point + offSet, new XYZ(-16, 0, 20)));
+            curveArray.Append(Line.CreateBound(new XYZ(-16, 0, 20), point3 + offSet));
+
+            ReferencePlane plane = doc.Create.NewReferencePlane2(new XYZ(0, 0, 0), new XYZ(0, 0, 20), new XYZ(0, 20, 0), doc.ActiveView);
+            doc.Create.NewExtrusionRoof(curveArray, plane, level2, roofType, -20, 20);
 
 
 
