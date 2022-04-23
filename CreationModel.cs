@@ -67,30 +67,31 @@ namespace CreationModelPlugin
             //на документе получаем свойство Application
             Application application = doc.Application;
 
-
-
             LocationCurve curve1 = walls[0].Location as LocationCurve;
             LocationCurve curve2 = walls[2].Location as LocationCurve;
+
+            double wallWidth = walls[0].Width;
+            double dt = wallWidth / 2;
 
             XYZ point = curve1.Curve.GetEndPoint(0);
             XYZ point1 = curve1.Curve.GetEndPoint(1);
             XYZ point2 = curve2.Curve.GetEndPoint(0);
             XYZ point3 = curve2.Curve.GetEndPoint(1);
+            double xPoint = point.X-2;
+            double xPoint1 = point1.X+2;
 
 
-            double wallWidth = walls[0].Width;
-            double ww = wallWidth / 2;
+
             double dh = level2.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
-            XYZ offSet = new XYZ(-ww, -ww, dh);
+            XYZ offSet = new XYZ(-3, -3, dh);
+            XYZ offSet1 = new XYZ(-3, 3, dh);
 
             CurveArray curveArray = new CurveArray();
             curveArray.Append(Line.CreateBound(point + offSet, new XYZ(-16, 0, 20)));
-            curveArray.Append(Line.CreateBound(new XYZ(-16, 0, 20), point3 + offSet));
+            curveArray.Append(Line.CreateBound(new XYZ(-16, 0, 20), point3 + offSet1));
 
             ReferencePlane plane = doc.Create.NewReferencePlane2(new XYZ(0, 0, 0), new XYZ(0, 0, 20), new XYZ(0, 20, 0), doc.ActiveView);
-            doc.Create.NewExtrusionRoof(curveArray, plane, level2, roofType, -20, 20);
-
-
+            doc.Create.NewExtrusionRoof(curveArray, plane, level2, roofType, xPoint, xPoint1);
 
         }
 
