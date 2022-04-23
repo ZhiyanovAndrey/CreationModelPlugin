@@ -27,7 +27,7 @@ namespace CreationModelPlugin
             //формирование списка точек где будут стены
             //зададим размеры домика
             double width = UnitUtils.ConvertToInternalUnits(10000, UnitTypeId.Millimeters);
-            double depth = UnitUtils.ConvertToInternalUnits(5000, UnitTypeId.Millimeters);
+            double depth = UnitUtils.ConvertToInternalUnits(6000, UnitTypeId.Millimeters);
             double dx = width / 2;
             double dy = depth / 2;
 
@@ -81,16 +81,23 @@ namespace CreationModelPlugin
             double xPoint1 = point1.X+2;
 
 
-
+            //зададим смещение по высоте и по ширине от стен для начального положения крыши
             double dh = level2.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
             XYZ offSet = new XYZ(-3, -3, dh);
             XYZ offSet1 = new XYZ(-3, 3, dh);
 
+            //зададим высоту крыши
+            double hightRoof = UnitUtils.ConvertToInternalUnits(2000, UnitTypeId.Millimeters);
+            double h = dh+hightRoof;
+            //пустой массив для отрезков по которым строится крыша
             CurveArray curveArray = new CurveArray();
-            curveArray.Append(Line.CreateBound(point + offSet, new XYZ(-16, 0, 20)));
-            curveArray.Append(Line.CreateBound(new XYZ(-16, 0, 20), point3 + offSet1));
+            curveArray.Append(Line.CreateBound(point + offSet, new XYZ(0, 0, h)));
+            curveArray.Append(Line.CreateBound(new XYZ(0, 0, h), point3 + offSet1));
 
+            //создадим опорную плоскость перпендикулярно крыше
             ReferencePlane plane = doc.Create.NewReferencePlane2(new XYZ(0, 0, 0), new XYZ(0, 0, 20), new XYZ(0, 20, 0), doc.ActiveView);
+
+            //создадим крышу по двум отрезкам и зададим смещения от опорной плоскости xPoint, xPoint1
             doc.Create.NewExtrusionRoof(curveArray, plane, level2, roofType, xPoint, xPoint1);
 
         }
